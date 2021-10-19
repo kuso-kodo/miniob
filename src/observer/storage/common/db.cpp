@@ -79,6 +79,19 @@ Table *Db::find_table(const char *table_name) const {
   return nullptr;
 }
 
+RC Db::drop_table(const char *table_name) {
+  RC rc = RC::SUCCESS;
+  if (opened_tables_.count(table_name) == 0) {
+    return RC::SCHEMA_DB_NOT_EXIST;
+  }
+  Table *table = opened_tables_[table_name];
+  std::string table_path = table_meta_file(path_.c_str(), table_name);
+  table->drop(table_path.c_str());
+  opened_tables_.erase(table_name);
+  delete table;
+  return rc;
+}
+
 RC Db::open_all_tables() {
   std::vector<std::string> table_meta_files;
   int ret = common::list_file(path_.c_str(), TABLE_META_FILE_PATTERN, table_meta_files);
