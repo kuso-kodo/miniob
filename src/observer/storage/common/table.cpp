@@ -132,6 +132,7 @@ RC Table::drop(const char *path) {
     // Remove data
     record_handler_->close();
     data_buffer_pool_->close_file(file_id_);
+    data_buffer_pool = nullptr;
     std::string data_file = std::string(base_dir) + "/" + name + TABLE_DATA_SUFFIX;
     ::remove(data_file.c_str());
     // Remove metadata
