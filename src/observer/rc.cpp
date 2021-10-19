@@ -14,7 +14,9 @@ See the Mulan PSL v2 for more details. */
 
 #include "rc.h"
 
-#define RC_CASE_STRING(rc)  case rc : return #rc
+#define RC_CASE_STRING(rc) \
+  case rc:                 \
+    return #rc
 
 const char *strrc(RC rc) {
   switch (rc) {

@@ -16,13 +16,13 @@ See the Mulan PSL v2 for more details. */
  */
 
 
+#include <iostream>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <iostream>
 
-#include "init.h"
 #include "common/os/process.h"
 #include "common/os/signal.h"
+#include "init.h"
 #include "net/server.h"
 #include "net/server_param.h"
 
@@ -52,35 +52,35 @@ void parse_parameter(int argc, char **argv) {
   extern char *optarg;
   while ((opt = getopt(argc, argv, "dp:s:f:o:e:h")) > 0) {
     switch (opt) {
-    case 's':
-      process_param->set_unix_socket_path(optarg);
-      break;
-    case 'p':
-      process_param->set_server_port(atoi(optarg));
-      break;
-    case 'f':
-      process_param->set_conf(optarg);
-      break;
-    case 'o':
-      process_param->set_std_out(optarg);
-      break;
-    case 'e':
-      process_param->set_std_err(optarg);
-      break;
-    case 'd':
-      process_param->set_demon(true);
-      break;
-    case 'h':
-    default:
-      usage();
-      return;
+      case 's':
+        process_param->set_unix_socket_path(optarg);
+        break;
+      case 'p':
+        process_param->set_server_port(atoi(optarg));
+        break;
+      case 'f':
+        process_param->set_conf(optarg);
+        break;
+      case 'o':
+        process_param->set_std_out(optarg);
+        break;
+      case 'e':
+        process_param->set_std_err(optarg);
+        break;
+      case 'd':
+        process_param->set_demon(true);
+        break;
+      case 'h':
+      default:
+        usage();
+        return;
     }
   }
 }
 
 Server *init_server() {
   std::map<std::string, std::string> net_section =
-      get_properties()->get(NET);
+          get_properties()->get(NET);
 
   ProcessParam *process_param = the_process_param();
 
@@ -131,7 +131,7 @@ Server *init_server() {
  * 所以这里单独创建一个线程
  */
 void *quit_thread_func(void *_signum) {
-  intptr_t signum = (intptr_t)_signum;
+  intptr_t signum = (intptr_t) _signum;
   LOG_INFO("Receive signal: %ld", signum);
   if (g_server) {
     g_server->shutdown();
@@ -142,7 +142,7 @@ void *quit_thread_func(void *_signum) {
 }
 void quit_signal_handle(int signum) {
   pthread_t tid;
-  pthread_create(&tid, nullptr, quit_thread_func, (void *)(intptr_t)signum);
+  pthread_create(&tid, nullptr, quit_thread_func, (void *) (intptr_t) signum);
 }
 
 int main(int argc, char **argv) {

@@ -22,10 +22,10 @@ struct Record;
 class Table;
 
 struct ConDesc {
-  bool   is_attr;     // 是否属性，false 表示是值
-  int    attr_length; // 如果是属性，表示属性值长度
-  int    attr_offset; // 如果是属性，表示在记录中的偏移量
-  void * value;       // 如果是值类型，这里记录值的数据
+  bool is_attr;   // 是否属性，false 表示是值
+  int attr_length;// 如果是属性，表示属性值长度
+  int attr_offset;// 如果是属性，表示在记录中的偏移量
+  void *value;    // 如果是值类型，这里记录值的数据
 };
 
 class ConditionFilter {
@@ -64,10 +64,10 @@ public:
   }
 
 private:
-  ConDesc  left_;
-  ConDesc  right_;
+  ConDesc left_;
+  ConDesc right_;
   AttrType attr_type_ = UNDEFINED;
-  CompOp   comp_op_ = NO_OP;
+  CompOp comp_op_ = NO_OP;
 };
 
 class CompositeConditionFilter : public ConditionFilter {
@@ -89,10 +89,11 @@ public:
 
 private:
   RC init(const ConditionFilter *filters[], int filter_num, bool own_memory);
+
 private:
-  const ConditionFilter **      filters_ = nullptr;
-  int                           filter_num_ = 0;
-  bool                          memory_owner_ = false; // filters_的内存是否由自己来控制
+  const ConditionFilter **filters_ = nullptr;
+  int filter_num_ = 0;
+  bool memory_owner_ = false;// filters_的内存是否由自己来控制
 };
 
-#endif // __OBSERVER_STORAGE_COMMON_CONDITION_FILTER_H_
+#endif// __OBSERVER_STORAGE_COMMON_CONDITION_FILTER_H_

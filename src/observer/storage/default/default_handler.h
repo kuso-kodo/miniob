@@ -14,8 +14,8 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_DEFAULT_ENGINE_H__
 #define __OBSERVER_STORAGE_DEFAULT_ENGINE_H__
 
-#include <string>
 #include <map>
+#include <string>
 
 #include "storage/common/db.h"
 
@@ -122,7 +122,7 @@ public:
    * @param values
    * @return
    */
-  RC insert_record(Trx * trx, const char *dbname, const char *relation_name, int value_num, const Value *values);
+  RC insert_record(Trx *trx, const char *dbname, const char *relation_name, int value_num, const Value *values);
 
   /**
    * 该函数用来删除relName表中所有满足指定条件的元组以及该元组对应的索引项。
@@ -134,7 +134,7 @@ public:
    * @return
    */
   RC delete_record(Trx *trx, const char *dbname, const char *relation_name,
-                           int condition_num, const Condition *conditions, int *deleted_count);
+                   int condition_num, const Condition *conditions, int *deleted_count);
 
   /**
    * 该函数用于更新relName表中所有满足指定条件的元组，
@@ -148,21 +148,22 @@ public:
    * @param conditions
    * @return
    */
-  RC update_record(Trx * trx, const char *dbname, const char *relation_name, const char *attribute_name, const Value *value,
-                            int condition_num, const Condition *conditions, int *updated_count);
+  RC update_record(Trx *trx, const char *dbname, const char *relation_name, const char *attribute_name, const Value *value,
+                   int condition_num, const Condition *conditions, int *updated_count);
 
 public:
   Db *find_db(const char *dbname) const;
-  Table *find_table(const char * dbname, const char *table_name) const;
+  Table *find_table(const char *dbname, const char *table_name) const;
 
   RC sync();
 
 public:
   static DefaultHandler &get_default();
+
 private:
   std::string base_dir_;
   std::string db_dir_;
-  std::map<std::string, Db*>          opened_dbs_;
-}; // class Handler
+  std::map<std::string, Db *> opened_dbs_;
+};// class Handler
 
-#endif // __OBSERVER_STORAGE_DEFAULT_ENGINE_H__
+#endif// __OBSERVER_STORAGE_DEFAULT_ENGINE_H__

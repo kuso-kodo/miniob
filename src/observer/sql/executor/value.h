@@ -17,8 +17,8 @@ See the Mulan PSL v2 for more details. */
 
 #include <string.h>
 
-#include <string>
 #include <ostream>
+#include <string>
 
 class TupleValue {
 public:
@@ -27,6 +27,7 @@ public:
 
   virtual void to_string(std::ostream &os) const = 0;
   virtual int compare(const TupleValue &other) const = 0;
+
 private:
 };
 
@@ -40,7 +41,7 @@ public:
   }
 
   int compare(const TupleValue &other) const override {
-    const IntValue & int_other = (const IntValue &)other;
+    const IntValue &int_other = (const IntValue &) other;
     return value_ - int_other.value_;
   }
 
@@ -58,9 +59,9 @@ public:
   }
 
   int compare(const TupleValue &other) const override {
-    const FloatValue & float_other = (const FloatValue &)other;
+    const FloatValue &float_other = (const FloatValue &) other;
     float result = value_ - float_other.value_;
-    if (result > 0) { // 浮点数没有考虑精度问题
+    if (result > 0) {// 浮点数没有考虑精度问题
       return 1;
     }
     if (result < 0) {
@@ -68,13 +69,14 @@ public:
     }
     return 0;
   }
+
 private:
   float value_;
 };
 
 class StringValue : public TupleValue {
 public:
-  StringValue(const char *value, int len) : value_(value, len){
+  StringValue(const char *value, int len) : value_(value, len) {
   }
   explicit StringValue(const char *value) : value_(value) {
   }
@@ -84,12 +86,13 @@ public:
   }
 
   int compare(const TupleValue &other) const override {
-    const StringValue &string_other = (const StringValue &)other;
+    const StringValue &string_other = (const StringValue &) other;
     return strcmp(value_.c_str(), string_other.value_.c_str());
   }
+
 private:
   std::string value_;
 };
 
 
-#endif //__OBSERVER_SQL_EXECUTOR_VALUE_H_
+#endif//__OBSERVER_SQL_EXECUTOR_VALUE_H_

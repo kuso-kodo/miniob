@@ -13,8 +13,8 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "sql/executor/tuple.h"
-#include "storage/common/table.h"
 #include "common/log/log.h"
+#include "storage/common/table.h"
 
 Tuple::Tuple(const Tuple &other) {
   LOG_PANIC("Copy constructor of tuple is not supported");
@@ -24,7 +24,7 @@ Tuple::Tuple(const Tuple &other) {
 Tuple::Tuple(Tuple &&other) noexcept : values_(std::move(other.values_)) {
 }
 
-Tuple & Tuple::operator=(Tuple &&other) noexcept {
+Tuple &Tuple::operator=(Tuple &&other) noexcept {
   if (&other == this) {
     return *this;
   }
@@ -80,7 +80,7 @@ void TupleSchema::add(AttrType type, const char *table_name, const char *field_n
 }
 
 void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const char *field_name) {
-  for (const auto &field: fields_) {
+  for (const auto &field : fields_) {
     if (0 == strcmp(field.table_name(), table_name) &&
         0 == strcmp(field.field_name(), field_name)) {
       return;
@@ -92,7 +92,7 @@ void TupleSchema::add_if_not_exists(AttrType type, const char *table_name, const
 
 void TupleSchema::append(const TupleSchema &other) {
   fields_.reserve(fields_.size() + other.fields_.size());
-  for (const auto &field: other.fields_) {
+  for (const auto &field : other.fields_) {
     fields_.emplace_back(field);
   }
 }
@@ -116,7 +116,7 @@ void TupleSchema::print(std::ostream &os) const {
 
   // 判断有多张表还是只有一张表
   std::set<std::string> table_names;
-  for (const auto &field: fields_) {
+  for (const auto &field : fields_) {
     table_names.insert(field.table_name());
   }
 
@@ -135,7 +135,7 @@ void TupleSchema::print(std::ostream &os) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-TupleSet::TupleSet(TupleSet &&other) : tuples_(std::move(other.tuples_)), schema_(other.schema_){
+TupleSet::TupleSet(TupleSet &&other) : tuples_(std::move(other.tuples_)), schema_(other.schema_) {
   other.schema_.clear();
 }
 
@@ -173,7 +173,7 @@ void TupleSet::print(std::ostream &os) const {
   for (const Tuple &item : tuples_) {
     const std::vector<std::shared_ptr<TupleValue>> &values = item.values();
     for (std::vector<std::shared_ptr<TupleValue>>::const_iterator iter = values.begin(), end = --values.end();
-          iter != end; ++iter) {
+         iter != end; ++iter) {
       (*iter)->to_string(os);
       os << " | ";
     }
@@ -207,8 +207,7 @@ const std::vector<Tuple> &TupleSet::tuples() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-TupleRecordConverter::TupleRecordConverter(Table *table, TupleSet &tuple_set) :
-      table_(table), tuple_set_(tuple_set){
+TupleRecordConverter::TupleRecordConverter(Table *table, TupleSet &tuple_set) : table_(table), tuple_set_(tuple_set) {
 }
 
 void TupleRecordConverter::add_record(const char *record) {
@@ -220,20 +219,17 @@ void TupleRecordConverter::add_record(const char *record) {
     assert(field_meta != nullptr);
     switch (field_meta->type()) {
       case INTS: {
-        int value = *(int*)(record + field_meta->offset());
+        int value = *(int *) (record + field_meta->offset());
         tuple.add(value);
-      }
-      break;
+      } break;
       case FLOATS: {
-        float value = *(float *)(record + field_meta->offset());
+        float value = *(float *) (record + field_meta->offset());
         tuple.add(value);
-      }
-        break;
+      } break;
       case CHARS: {
-        const char *s = record + field_meta->offset();  // 现在当做Cstring来处理
+        const char *s = record + field_meta->offset();// 现在当做Cstring来处理
         tuple.add(s, strlen(s));
-      }
-      break;
+      } break;
       default: {
         LOG_PANIC("Unsupported field type. type=%d", field_meta->type());
       }
@@ -242,5 +238,3 @@ void TupleRecordConverter::add_record(const char *record) {
 
   tuple_set_.add(std::move(tuple));
 }
-
-

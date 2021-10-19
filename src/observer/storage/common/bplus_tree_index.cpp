@@ -86,8 +86,7 @@ RC BplusTreeIndex::sync() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-BplusTreeIndexScanner::BplusTreeIndexScanner(BplusTreeScanner *tree_scanner) :
-    tree_scanner_(tree_scanner) {
+BplusTreeIndexScanner::BplusTreeIndexScanner(BplusTreeScanner *tree_scanner) : tree_scanner_(tree_scanner) {
 }
 
 BplusTreeIndexScanner::~BplusTreeIndexScanner() noexcept {

@@ -15,9 +15,9 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_COMMON_DB_H__
 #define __OBSERVER_STORAGE_COMMON_DB_H__
 
-#include <vector>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "rc.h"
 #include "sql/parser/parse_defs.h"
@@ -41,13 +41,14 @@ public:
   void all_tables(std::vector<std::string> &table_names) const;
 
   RC sync();
+
 private:
   RC open_all_tables();
 
 private:
-  std::string   name_;
-  std::string   path_;
-  std::unordered_map<std::string, Table *>  opened_tables_;
+  std::string name_;
+  std::string path_;
+  std::unordered_map<std::string, Table *> opened_tables_;
 };
 
-#endif // __OBSERVER_STORAGE_COMMON_DB_H__
+#endif// __OBSERVER_STORAGE_COMMON_DB_H__

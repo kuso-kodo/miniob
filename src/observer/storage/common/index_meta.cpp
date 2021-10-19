@@ -13,11 +13,11 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "storage/common/index_meta.h"
-#include "storage/common/field_meta.h"
-#include "storage/common/table_meta.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "rc.h"
+#include "storage/common/field_meta.h"
+#include "storage/common/table_meta.h"
 #include "json/json.h"
 
 const static Json::StaticString FIELD_NAME("name");
@@ -71,5 +71,5 @@ const char *IndexMeta::field() const {
 
 void IndexMeta::desc(std::ostream &os) const {
   os << "index name=" << name_
-      << ", field=" << field_;
+     << ", field=" << field_;
 }

@@ -149,4 +149,4 @@ RC closeIndexScan(IndexScan *indexScan);
  */
 RC getIndexTree(char *fileName, Tree *index);
 
-#endif //__OBSERVER_STORAGE_COMMON_INDEX_MANAGER_H_
+#endif//__OBSERVER_STORAGE_COMMON_INDEX_MANAGER_H_

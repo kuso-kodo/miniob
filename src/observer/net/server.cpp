@@ -31,8 +31,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "common/seda/seda_config.h"
 #include "event/session_event.h"
-#include "session/session.h"
 #include "ini_setting.h"
+#include "session/session.h"
 #include <common/metrics/metrics_registry.h>
 
 using namespace common;
@@ -62,7 +62,7 @@ Server::~Server() {
   }
 }
 
-void Server::init(){
+void Server::init() {
   session_stage_ = get_seda_config()->get_stage(SESSION_STAGE_NAME);
 
   MetricsRegistry &metricsRegistry = get_metrics_registry();
@@ -74,7 +74,7 @@ void Server::init(){
   if (Server::write_socket_metric_ == nullptr) {
     Server::write_socket_metric_ = new SimpleTimer();
     metricsRegistry.register_metric(WRITE_SOCKET_METRIC_TAG, Server::write_socket_metric_);
-  }  
+  }
 }
 
 int Server::set_non_block(int fd) {
@@ -103,7 +103,7 @@ void Server::close_connection(ConnectionContext *client_context) {
 }
 
 void Server::recv(int fd, short ev, void *arg) {
-  ConnectionContext *client = (ConnectionContext *)arg;
+  ConnectionContext *client = (ConnectionContext *) arg;
   //Server::send(sev->getClient(), sev->getRequestBuf(), strlen(sev->getRequestBuf()));
 
   int data_len = 0;
@@ -113,7 +113,7 @@ void Server::recv(int fd, short ev, void *arg) {
 
   TimerStat timer_stat(*read_socket_metric_);
   MUTEX_LOCK(&client->mutex);
-	// 持续接收消息，直到遇到'\0'。将'\0'遇到的后续数据直接丢弃没有处理，因为目前仅支持一收一发的模式
+  // 持续接收消息，直到遇到'\0'。将'\0'遇到的后续数据直接丢弃没有处理，因为目前仅支持一收一发的模式
   while (true) {
     read_len = ::read(client->fd, client->buf + data_len, buf_size - data_len);
     if (read_len < 0) {
@@ -133,7 +133,7 @@ void Server::recv(int fd, short ev, void *arg) {
 
 
     bool msg_end = false;
-    for(int i = 0; i < read_len; i++) {
+    for (int i = 0; i < read_len; i++) {
       if (client->buf[data_len + i] == 0) {
         data_len += i + 1;
         msg_end = true;
@@ -151,7 +151,7 @@ void Server::recv(int fd, short ev, void *arg) {
   MUTEX_UNLOCK(&client->mutex);
   timer_stat.end();
 
-  if(data_len > buf_size) {
+  if (data_len > buf_size) {
     LOG_WARN("The length of sql exceeds the limitation %d\n", buf_size);
     close_connection(client);
     return;
@@ -202,13 +202,13 @@ int Server::send(ConnectionContext *client, const char *buf, int data_len) {
 }
 
 void Server::accept(int fd, short ev, void *arg) {
-  Server *instance = (Server *)arg;
+  Server *instance = (Server *) arg;
   struct sockaddr_in addr;
   socklen_t addrlen = sizeof(addr);
 
   int ret = 0;
 
-  int client_fd = ::accept(fd, (struct sockaddr *)&addr, &addrlen);
+  int client_fd = ::accept(fd, (struct sockaddr *) &addr, &addrlen);
   if (client_fd < 0) {
     LOG_ERROR("Failed to accept client's connection, %s", strerror(errno));
     return;
@@ -314,7 +314,7 @@ int Server::start_tcp_server() {
   sa.sin_port = htons(server_param_.port);
   sa.sin_addr.s_addr = htonl(server_param_.listen_addr);
 
-  ret = bind(server_socket_, (struct sockaddr *)&sa, sizeof(sa));
+  ret = bind(server_socket_, (struct sockaddr *) &sa, sizeof(sa));
   if (ret < 0) {
     LOG_ERROR("bind(): can not bind server socket, %s", strerror(errno));
     ::close(server_socket_);
@@ -372,7 +372,7 @@ int Server::start_unix_socket_server() {
   sockaddr.sun_family = PF_UNIX;
   snprintf(sockaddr.sun_path, sizeof(sockaddr.sun_path), "%s", server_param_.unix_socket_path.c_str());
 
-  ret = bind(server_socket_, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+  ret = bind(server_socket_, (struct sockaddr *) &sockaddr, sizeof(sockaddr));
   if (ret < 0) {
     LOG_ERROR("bind(): can not bind server socket(path=%s), %s", sockaddr.sun_path, strerror(errno));
     ::close(server_socket_);

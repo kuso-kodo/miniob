@@ -18,13 +18,12 @@ SessionEvent::SessionEvent(ConnectionContext *client) : client_(client) {
 }
 
 SessionEvent::~SessionEvent() {
-
 }
 
 ConnectionContext *SessionEvent::get_client() const { return client_; }
 
-const char *SessionEvent::get_response() const { 
-  return response_.c_str(); 
+const char *SessionEvent::get_response() const {
+  return response_.c_str();
 }
 
 void SessionEvent::set_response(const char *response) {

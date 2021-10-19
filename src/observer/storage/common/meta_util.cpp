@@ -20,4 +20,3 @@ std::string table_meta_file(const char *base_dir, const char *table_name) {
 std::string index_data_file(const char *base_dir, const char *table_name, const char *index_name) {
   return std::string(base_dir) + "/" + table_name + "-" + index_name + TABLE_INDEX_SUFFIX;
 }
-

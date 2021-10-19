@@ -31,11 +31,11 @@ protected:
   void cleanup();
   void handle_event(common::StageEvent *event);
   void callback_event(common::StageEvent *event,
-                     common::CallbackContext *context);
+                      common::CallbackContext *context);
 
 protected:
 private:
   Stage *execute_stage = nullptr;
 };
 
-#endif //__OBSERVER_SQL_OPTIMIZE_STAGE_H__
+#endif//__OBSERVER_SQL_OPTIMIZE_STAGE_H__

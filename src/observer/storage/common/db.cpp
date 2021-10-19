@@ -14,16 +14,16 @@ See the Mulan PSL v2 for more details. */
 
 #include "storage/common/db.h"
 
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <vector>
 
+#include "common/lang/string.h"
 #include "common/log/log.h"
 #include "common/os/path.h"
-#include "common/lang/string.h"
-#include "storage/common/table_meta.h"
-#include "storage/common/table.h"
 #include "storage/common/meta_util.h"
+#include "storage/common/table.h"
+#include "storage/common/table_meta.h"
 
 
 Db::~Db() {
@@ -58,7 +58,7 @@ RC Db::create_table(const char *table_name, int attribute_count, const AttrInfo 
     return RC::SCHEMA_TABLE_EXIST;
   }
 
-  std::string table_file_path = table_meta_file(path_.c_str(), table_name); // 文件路径可以移到Table模块
+  std::string table_file_path = table_meta_file(path_.c_str(), table_name);// 文件路径可以移到Table模块
   Table *table = new Table();
   rc = table->create(table_file_path.c_str(), table_name, path_.c_str(), attribute_count, attributes);
   if (rc != RC::SUCCESS) {
@@ -112,8 +112,8 @@ RC Db::open_all_tables() {
 
     if (opened_tables_.count(table->name()) != 0) {
       delete table;
-      LOG_ERROR("Duplicate table with difference file name. table=%s, the other filename=%s", 
-        table->name(), filename.c_str());
+      LOG_ERROR("Duplicate table with difference file name. table=%s, the other filename=%s",
+                table->name(), filename.c_str());
       return RC::GENERIC_ERROR;
     }
 
@@ -130,14 +130,14 @@ const char *Db::name() const {
 }
 
 void Db::all_tables(std::vector<std::string> &table_names) const {
-  for (const auto &table_item: opened_tables_) {
+  for (const auto &table_item : opened_tables_) {
     table_names.emplace_back(table_item.first);
   }
 }
 
 RC Db::sync() {
   RC rc = RC::SUCCESS;
-  for (const auto &table_pair: opened_tables_) {
+  for (const auto &table_pair : opened_tables_) {
     Table *table = table_pair.second;
     rc = table->sync();
     if (rc != RC::SUCCESS) {

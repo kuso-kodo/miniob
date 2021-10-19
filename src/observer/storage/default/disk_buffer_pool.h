@@ -60,7 +60,7 @@ typedef struct {
   Frame *frame;
 } BPPageHandle;
 
-class BPFileHandle{
+class BPFileHandle {
 public:
   BPFileHandle() {
     memset(this, 0, sizeof(*this));
@@ -74,7 +74,7 @@ public:
   Page *hdr_page;
   char *bitmap;
   BPFileSubHeader *file_sub_header;
-} ;
+};
 
 class BPManager {
 public:
@@ -97,11 +97,11 @@ public:
   }
 
   Frame *alloc() {
-    return nullptr; // TODO for test
+    return nullptr;// TODO for test
   }
 
   Frame *get(int file_desc, PageNum page_num) {
-    return nullptr; // TODO for test
+    return nullptr;// TODO for test
   }
 
   Frame *getFrame() { return frame; }
@@ -110,7 +110,7 @@ public:
 
 public:
   int size;
-  Frame * frame = nullptr;
+  Frame *frame = nullptr;
   bool *allocated = nullptr;
 };
 
@@ -211,4 +211,4 @@ private:
 
 DiskBufferPool *theGlobalDiskBufferPool();
 
-#endif //__OBSERVER_STORAGE_COMMON_PAGE_MANAGER_H_
+#endif//__OBSERVER_STORAGE_COMMON_PAGE_MANAGER_H_

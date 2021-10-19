@@ -14,10 +14,10 @@ See the Mulan PSL v2 for more details. */
 
 #include <algorithm>
 
-#include "storage/common/table_meta.h"
-#include "json/json.h"
 #include "common/log/log.h"
+#include "storage/common/table_meta.h"
 #include "storage/trx/trx.h"
+#include "json/json.h"
 
 static const Json::StaticString FIELD_TABLE_NAME("table_name");
 static const Json::StaticString FIELD_FIELDS("fields");
@@ -25,14 +25,13 @@ static const Json::StaticString FIELD_INDEXES("indexes");
 
 std::vector<FieldMeta> TableMeta::sys_fields_;
 
-TableMeta::TableMeta(const TableMeta &other) :
-        name_(other.name_),
-        fields_(other.fields_),
-        indexes_(other.indexes_),
-        record_size_(other.record_size_){
+TableMeta::TableMeta(const TableMeta &other) : name_(other.name_),
+                                               fields_(other.fields_),
+                                               indexes_(other.indexes_),
+                                               record_size_(other.record_size_) {
 }
 
-void TableMeta::swap(TableMeta &other) noexcept{
+void TableMeta::swap(TableMeta &other) noexcept {
   name_.swap(other.name_);
   fields_.swap(other.fields_);
   indexes_.swap(other.indexes_);
@@ -76,7 +75,7 @@ RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
     fields_[i] = sys_fields_[i];
   }
 
-  int field_offset = sys_fields_.back().offset() + sys_fields_.back().len(); // 当前实现下，所有类型都是4字节对齐的，所以不再考虑字节对齐问题
+  int field_offset = sys_fields_.back().offset() + sys_fields_.back().len();// 当前实现下，所有类型都是4字节对齐的，所以不再考虑字节对齐问题
 
   for (int i = 0; i < field_num; i++) {
     const AttrInfo &attr_info = attributes[i];
@@ -105,14 +104,14 @@ const char *TableMeta::name() const {
   return name_.c_str();
 }
 
-const FieldMeta * TableMeta::trx_field() const {
+const FieldMeta *TableMeta::trx_field() const {
   return &fields_[0];
 }
 
-const FieldMeta * TableMeta::field(int index) const {
+const FieldMeta *TableMeta::field(int index) const {
   return &fields_[index];
 }
-const FieldMeta * TableMeta::field(const char *name) const {
+const FieldMeta *TableMeta::field(const char *name) const {
   if (nullptr == name) {
     return nullptr;
   }
@@ -124,7 +123,7 @@ const FieldMeta * TableMeta::field(const char *name) const {
   return nullptr;
 }
 
-const FieldMeta * TableMeta::find_field_by_offset(int offset) const {
+const FieldMeta *TableMeta::find_field_by_offset(int offset) const {
   for (const FieldMeta &field : fields_) {
     if (field.offset() == offset) {
       return &field;
@@ -140,7 +139,7 @@ int TableMeta::sys_field_num() const {
   return sys_fields_.size();
 }
 
-const IndexMeta * TableMeta::index(const char *name) const {
+const IndexMeta *TableMeta::index(const char *name) const {
   for (const IndexMeta &index : indexes_) {
     if (0 == strcmp(index.name(), name)) {
       return &index;
@@ -149,7 +148,7 @@ const IndexMeta * TableMeta::index(const char *name) const {
   return nullptr;
 }
 
-const IndexMeta * TableMeta::find_index_by_field(const char *field) const {
+const IndexMeta *TableMeta::find_index_by_field(const char *field) const {
   for (const IndexMeta &index : indexes_) {
     if (0 == strcmp(index.field(), field)) {
       return &index;
@@ -158,7 +157,7 @@ const IndexMeta * TableMeta::find_index_by_field(const char *field) const {
   return nullptr;
 }
 
-const IndexMeta * TableMeta::index(int i ) const {
+const IndexMeta *TableMeta::index(int i) const {
   return &indexes_[i];
 }
 
@@ -176,7 +175,7 @@ int TableMeta::serialize(std::ostream &ss) const {
   table_value[FIELD_TABLE_NAME] = name_;
 
   Json::Value fields_value;
-  for (const FieldMeta & field : fields_) {
+  for (const FieldMeta &field : fields_) {
     Json::Value field_value;
     field.to_json(field_value);
     fields_value.append(std::move(field_value));
@@ -197,7 +196,7 @@ int TableMeta::serialize(std::ostream &ss) const {
 
   std::streampos old_pos = ss.tellp();
   writer->write(table_value, &ss);
-  int ret = (int)(ss.tellp() - old_pos);
+  int ret = (int) (ss.tellp() - old_pos);
 
   delete writer;
   return ret;
@@ -246,8 +245,8 @@ int TableMeta::deserialize(std::istream &is) {
     }
   }
 
-  std::sort(fields.begin(), fields.end(), 
-      [](const FieldMeta &f1, const FieldMeta &f2){return f1.offset() < f2.offset();});
+  std::sort(fields.begin(), fields.end(),
+            [](const FieldMeta &f1, const FieldMeta &f2) { return f1.offset() < f2.offset(); });
 
   name_.swap(table_name);
   fields_.swap(fields);
@@ -274,7 +273,7 @@ int TableMeta::deserialize(std::istream &is) {
     indexes_.swap(indexes);
   }
 
-  return (int)(is.tellg() - old_pos);
+  return (int) (is.tellg() - old_pos);
 }
 
 int TableMeta::get_serial_size() const {
@@ -286,13 +285,13 @@ void TableMeta::to_string(std::string &output) const {
 
 void TableMeta::desc(std::ostream &os) const {
   os << name_ << '(' << std::endl;
-  for (const auto &field: fields_) {
+  for (const auto &field : fields_) {
     os << '\t';
     field.desc(os);
     os << std::endl;
   }
 
-  for (const auto &index: indexes_) {
+  for (const auto &index : indexes_) {
     os << '\t';
     index.desc(os);
     os << std::endl;

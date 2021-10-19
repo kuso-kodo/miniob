@@ -15,8 +15,8 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_COMMON_BPLUS_TREE_INDEX_H_
 #define __OBSERVER_STORAGE_COMMON_BPLUS_TREE_INDEX_H_
 
-#include "storage/common/index.h"
 #include "storage/common/bplus_tree.h"
+#include "storage/common/index.h"
 
 class BplusTreeIndex : public Index {
 public:
@@ -46,8 +46,9 @@ public:
 
   RC next_entry(RID *rid) override;
   RC destroy() override;
+
 private:
-  BplusTreeScanner * tree_scanner_;
+  BplusTreeScanner *tree_scanner_;
 };
 
-#endif //__OBSERVER_STORAGE_COMMON_BPLUS_TREE_INDEX_H_
+#endif//__OBSERVER_STORAGE_COMMON_BPLUS_TREE_INDEX_H_

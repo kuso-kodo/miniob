@@ -26,4 +26,3 @@ ExecutionPlanEvent::~ExecutionPlanEvent() {
   query_destroy(sqls_);
   sqls_ = nullptr;
 }
-

@@ -18,8 +18,8 @@ See the Mulan PSL v2 for more details. */
 #include <memory>
 #include <vector>
 
-#include "sql/parser/parse.h"
 #include "sql/executor/value.h"
+#include "sql/parser/parse.h"
 
 class Table;
 
@@ -31,8 +31,8 @@ public:
 
   ~Tuple();
 
-  Tuple(Tuple &&other) noexcept ;
-  Tuple & operator=(Tuple &&other) noexcept ;
+  Tuple(Tuple &&other) noexcept;
+  Tuple &operator=(Tuple &&other) noexcept;
 
   void add(TupleValue *value);
   void add(const std::shared_ptr<TupleValue> &other);
@@ -57,16 +57,15 @@ public:
   }
 
 private:
-  std::vector<std::shared_ptr<TupleValue>>  values_;
+  std::vector<std::shared_ptr<TupleValue>> values_;
 };
 
 class TupleField {
 public:
-  TupleField(AttrType type, const char *table_name, const char *field_name) :
-          type_(type), table_name_(table_name), field_name_(field_name){
+  TupleField(AttrType type, const char *table_name, const char *field_name) : type_(type), table_name_(table_name), field_name_(field_name) {
   }
 
-  AttrType  type() const{
+  AttrType type() const {
     return type_;
   }
 
@@ -78,8 +77,9 @@ public:
   }
 
   std::string to_string() const;
+
 private:
-  AttrType  type_;
+  AttrType type_;
   std::string table_name_;
   std::string field_name_;
 };
@@ -108,8 +108,10 @@ public:
   }
 
   void print(std::ostream &os) const;
+
 public:
   static void from_table(const Table *table, TupleSchema &schema);
+
 private:
   std::vector<TupleField> fields_;
 };
@@ -120,7 +122,7 @@ public:
   TupleSet(TupleSet &&other);
   explicit TupleSet(const TupleSchema &schema) : schema_(schema) {
   }
-  TupleSet &operator =(TupleSet &&other);
+  TupleSet &operator=(TupleSet &&other);
 
   ~TupleSet() = default;
 
@@ -128,7 +130,7 @@ public:
 
   const TupleSchema &get_schema() const;
 
-  void add(Tuple && tuple);
+  void add(Tuple &&tuple);
 
   void clear();
 
@@ -138,10 +140,12 @@ public:
   const std::vector<Tuple> &tuples() const;
 
   void print(std::ostream &os) const;
+
 public:
   const TupleSchema &schema() const {
     return schema_;
   }
+
 private:
   std::vector<Tuple> tuples_;
   TupleSchema schema_;
@@ -152,9 +156,10 @@ public:
   TupleRecordConverter(Table *table, TupleSet &tuple_set);
 
   void add_record(const char *record);
+
 private:
   Table *table_;
   TupleSet &tuple_set_;
 };
 
-#endif //__OBSERVER_SQL_EXECUTOR_TUPLE_H_
+#endif//__OBSERVER_SQL_EXECUTOR_TUPLE_H_

@@ -23,8 +23,8 @@ See the Mulan PSL v2 for more details. */
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/un.h>
-#include <unistd.h>
 #include <termios.h>
+#include <unistd.h>
 
 #include "common/defs.h"
 #include "common/lang/string.h"
@@ -51,9 +51,9 @@ int init_unix_sock(const char *unix_sock_path) {
   sockaddr.sun_family = PF_UNIX;
   snprintf(sockaddr.sun_path, sizeof(sockaddr.sun_path), "%s", unix_sock_path);
 
-  if (connect(sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0) {
+  if (connect(sockfd, (struct sockaddr *) &sockaddr, sizeof(sockaddr)) < 0) {
     fprintf(stderr, "failed to connect to server. unix socket path '%s'. error %s",
-        sockaddr.sun_path, strerror(errno));
+            sockaddr.sun_path, strerror(errno));
     close(sockfd);
     return -1;
   }
@@ -77,10 +77,10 @@ int init_tcp_sock(const char *server_host, int server_port) {
 
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(server_port);
-  serv_addr.sin_addr = *((struct in_addr *)host->h_addr);
+  serv_addr.sin_addr = *((struct in_addr *) host->h_addr);
   bzero(&(serv_addr.sin_zero), 8);
 
-  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) ==
+  if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(struct sockaddr)) ==
       -1) {
     fprintf(stderr, "Failed to connect. errmsg=%d:%s\n", errno, strerror(errno));
     close(sockfd);
@@ -104,7 +104,7 @@ int set_terminal_noncanonical() {
 
   struct termios new_attr = old_termios;
   new_attr.c_lflag &= ~ICANON;
-	new_attr.c_cc[VERASE] = '\b';
+  new_attr.c_cc[VERASE] = '\b';
   ret = tcsetattr(fd, TCSANOW, &new_attr);
   if (ret < 0) {
     printf("Failed to set tc attr. error=%s\n", strerror(errno));
@@ -114,7 +114,7 @@ int set_terminal_noncanonical() {
 }
 
 int main(int argc, char *argv[]) {
-  int ret = 0; // set_terminal_noncanonical();
+  int ret = 0;// set_terminal_noncanonical();
   if (ret < 0) {
     printf("Warning: failed to set terminal non canonical. Long command may be handled incorrect\n");
   }
@@ -126,15 +126,15 @@ int main(int argc, char *argv[]) {
   extern char *optarg;
   while ((opt = getopt(argc, argv, "s:h:p:")) > 0) {
     switch (opt) {
-    case 's':
-      unix_socket_path = optarg;
-      break;
-    case 'p':
-      server_port = atoi(optarg);
-      break;
-    case 'h':
-      server_host = optarg;
-      break;
+      case 's':
+        unix_socket_path = optarg;
+        break;
+      case 'p':
+        server_port = atoi(optarg);
+        break;
+      case 'h':
+        server_host = optarg;
+        break;
     }
   }
 
@@ -173,13 +173,13 @@ int main(int argc, char *argv[]) {
     memset(send_buf, 0, sizeof(send_buf));
 
     int len = 0;
-    while((len = recv(sockfd, send_buf, MAX_MEM_BUFFER_SIZE, 0)) > 0){  
+    while ((len = recv(sockfd, send_buf, MAX_MEM_BUFFER_SIZE, 0)) > 0) {
       bool msg_end = false;
       for (int i = 0; i < len; i++) {
         if (0 == send_buf[i]) {
           msg_end = true;
           break;
-		    }
+        }
         printf("%c", send_buf[i]);
       }
       if (msg_end) {
