@@ -27,6 +27,7 @@ const char *ATTR_TYPE_NAME[] = {
         "undefined",
         "chars",
         "ints",
+        "dates",
         "floats"};
 
 const char *attr_type_to_string(AttrType type) {

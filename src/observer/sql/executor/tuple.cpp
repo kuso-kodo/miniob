@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/executor/tuple.h"
 #include "common/log/log.h"
 #include "storage/common/table.h"
+#include <stdint.h>
 
 Tuple::Tuple(const Tuple &other) {
   LOG_PANIC("Copy constructor of tuple is not supported");
@@ -41,11 +42,17 @@ Tuple::~Tuple() {
 void Tuple::add(TupleValue *value) {
   values_.emplace_back(value);
 }
+
 void Tuple::add(const std::shared_ptr<TupleValue> &other) {
   values_.emplace_back(other);
 }
+
 void Tuple::add(int value) {
   add(new IntValue(value));
+}
+
+void Tuple::add(uint32_t value) {
+  add(new DateValue(value));
 }
 
 void Tuple::add(float value) {
@@ -224,6 +231,10 @@ void TupleRecordConverter::add_record(const char *record) {
       } break;
       case FLOATS: {
         float value = *(float *) (record + field_meta->offset());
+        tuple.add(value);
+      } break;
+      case DATES: {
+        uint32_t value = *(uint32_t *) (record + field_meta->offset());
         tuple.add(value);
       } break;
       case CHARS: {

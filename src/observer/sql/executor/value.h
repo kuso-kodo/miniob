@@ -49,6 +49,26 @@ private:
   int value_;
 };
 
+class DateValue : public TupleValue {
+public:
+  explicit DateValue(uint32_t value) : value_(value) {
+  }
+
+  void to_string(std::ostream &os) const override {
+    char s[20];
+    sprintf((char *) (&s), "%04d-%02d-%02d", (value_ >> 16) & 0xffff, (value_ >> 8) & 0xff, (value_) &0xff);
+    os << s;
+  }
+
+  int compare(const TupleValue &other) const override {
+    const DateValue &int_other = (const DateValue &) other;
+    return value_ - int_other.value_;
+  }
+
+private:
+  uint32_t value_;
+};
+
 class FloatValue : public TupleValue {
 public:
   explicit FloatValue(float value) : value_(value) {

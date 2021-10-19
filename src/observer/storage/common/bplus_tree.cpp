@@ -172,6 +172,16 @@ int CompareKey(const char *pdata, const char *pkey, AttrType attr_type, int attr
       if (i1 == i2)
         return 0;
     } break;
+    case DATES: {
+      i1 = *(uint32_t *) pdata;
+      i2 = *(uint32_t *) pkey;
+      if (i1 > i2)
+        return 1;
+      if (i1 < i2)
+        return -1;
+      if (i1 == i2)
+        return 0;
+    } break;
     case FLOATS: {
       f1 = *(float *) pdata;
       f2 = *(float *) pkey;
@@ -1783,6 +1793,7 @@ RC BplusTreeScanner::get_next_idx_in_memory(RID *rid) {
 bool BplusTreeScanner::satisfy_condition(const char *pkey) {
   int i1 = 0, i2 = 0;
   float f1 = 0, f2 = 0;
+  uint32_t t1 = 0, t2 = 0;
   const char *s1 = nullptr, *s2 = nullptr;
 
   if (comp_op_ == NO_OP) {
@@ -1794,6 +1805,10 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
     case INTS:
       i1 = *(int *) pkey;
       i2 = *(int *) value_;
+      break;
+    case DATES:
+      t1 = *(uint32_t *) pkey;
+      t2 = *(uint32_t *) value_;
       break;
     case FLOATS:
       f1 = *(float *) pkey;
@@ -1816,6 +1831,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case INTS:
           flag = (i1 == i2);
           break;
+        case DATES:
+          flag = (t1 == t2);
+          break;
         case FLOATS:
           flag = 0 == float_compare(f1, f2);
           break;
@@ -1830,6 +1848,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
       switch (attr_type) {
         case INTS:
           flag = (i1 < i2);
+          break;
+        case DATES:
+          flag = (t1 < t2);
           break;
         case FLOATS:
           flag = (f1 < f2);
@@ -1846,6 +1867,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case INTS:
           flag = (i1 > i2);
           break;
+        case DATES:
+          flag = (t1 > t2);
+          break;
         case FLOATS:
           flag = (f1 > f2);
           break;
@@ -1860,6 +1884,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
       switch (attr_type) {
         case INTS:
           flag = (i1 <= i2);
+          break;
+        case DATES:
+          flag = (t1 <= t2);
           break;
         case FLOATS:
           flag = (f1 <= f2);
@@ -1876,6 +1903,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
         case INTS:
           flag = (i1 >= i2);
           break;
+        case DATES:
+          flag = (t1 >= t2);
+          break;
         case FLOATS:
           flag = (f1 >= f2);
           break;
@@ -1890,6 +1920,9 @@ bool BplusTreeScanner::satisfy_condition(const char *pkey) {
       switch (attr_type) {
         case INTS:
           flag = (i1 != i2);
+          break;
+        case DATES:
+          flag = (t1 != t2);
           break;
         case FLOATS:
           flag = 0 != float_compare(f1, f2);

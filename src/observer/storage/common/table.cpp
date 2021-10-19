@@ -286,6 +286,28 @@ const TableMeta &Table::table_meta() const {
     return table_meta_;
 }
 
+bool check_date(const char *date) {
+    int y, m, d;
+    auto count = sscanf((const char *) date, "%d-%d-%d", &y, &m, &d);
+    if (count != 3 || y < 0 || m < 1 || d < 1 || m > 12) {
+        return false;
+    }
+    bool isRunYear;
+    if (y % 4 == 0) {
+        if (y % 100 == 0) {
+            isRunYear = ((y % 400) == 0);
+        } else {
+            isRunYear = true;
+        }
+    }
+    int day[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (m == 2) {
+        return isRunYear ? (d < 29) : (d < 28);
+    } else {
+        return d < day[m + 1];
+    }
+}
+
 RC Table::make_record(int value_num, const Value *values, char *&record_out) {
     // 检查字段类型是否一致
     if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
@@ -296,10 +318,18 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out) {
     for (int i = 0; i < value_num; i++) {
         const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
         const Value &value = values[i];
-        if (field->type() != value.type) {
-            LOG_ERROR("Invalid value type. field name=%s, type=%d, but given=%d",
-                      field->name(), field->type(), value.type);
-            return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+        if (field->type() == AttrType::DATES && value.type == AttrType::CHARS) {
+            if (!check_date((char *) value.data)) {
+                LOG_ERROR("Invalid value type. field name=%s, type=%d, but given=%d",
+                          field->name(), field->type(), value.type);
+                return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+            }
+        } else {
+            if (field->type() != value.type) {
+                LOG_ERROR("Invalid value type. field name=%s, type=%d, but given=%d",
+                          field->name(), field->type(), value.type);
+                return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+            }
         }
     }
 
@@ -310,7 +340,15 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out) {
     for (int i = 0; i < value_num; i++) {
         const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
         const Value &value = values[i];
-        memcpy(record + field->offset(), value.data, field->len());
+        if (field->type() == AttrType::DATES && value.type == AttrType::CHARS) {
+            int y, m, d;
+            sscanf((const char *) value.data, "%d-%d-%d", &y, &m, &d);
+            uint32_t timestamp = y << 16 | m << 8 | d;
+            LOG_INFO("Storing %d %d %d as %x", y, m, d, timestamp);
+            memcpy(record + field->offset(), &timestamp, field->len());
+        } else {
+            memcpy(record + field->offset(), value.data, field->len());
+        }
     }
 
     record_out = record;
