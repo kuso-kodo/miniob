@@ -209,6 +209,9 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right) {
 // 这里没有对输入的某些信息做合法性校验，比如查询的列名、where条件中的列名等，没有做必要的合法性校验
 // 需要补充上这一部分. 校验部分也可以放在resolve，不过跟execution放一起也没有关系
 RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_event) {
+#define RETURN_RC                           \
+  session_event->set_response("FAILURE\n"); \
+  return rc
 
   RC rc = RC::SUCCESS;
   Session *session = session_event->get_client()->session;
@@ -226,7 +229,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
         delete tmp_node;
       }
       end_trx_if_need(session, trx, false);
-      return rc;
+      RETURN_RC;
     }
     select_nodes.push_back(select_node);
   }
@@ -234,7 +237,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   if (select_nodes.empty()) {
     LOG_ERROR("No table given");
     end_trx_if_need(session, trx, false);
-    return RC::SQL_SYNTAX;
+    rc = RC::SQL_SYNTAX;
+    RETURN_RC;
   }
 
   std::vector<TupleSet> tuple_sets;
@@ -246,7 +250,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
         delete tmp_node;
       }
       end_trx_if_need(session, trx, false);
-      return rc;
+      RETURN_RC;
     } else {
       tuple_sets.push_back(std::move(tuple_set));
     }
@@ -266,6 +270,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   session_event->set_response(ss.str());
   end_trx_if_need(session, trx, true);
   return rc;
+#undef RETURN_RC
 }
 
 bool match_table(const Selects &selects, const char *table_name_in_condition, const char *table_name_to_match) {
