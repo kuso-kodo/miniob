@@ -43,7 +43,8 @@ typedef enum {
 typedef enum { UNDEFINED,
                CHARS,
                INTS,
-               FLOATS } AttrType;
+               FLOATS,
+               DATES } AttrType;
 
 //属性值
 typedef struct _Value {
