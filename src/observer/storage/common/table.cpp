@@ -319,8 +319,8 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out) {
     const Value &value = values[i];
     if (field->type() == AttrType::DATES && value.type == AttrType::CHARS) {
       if (!check_date((char *) value.data)) {
-        LOG_ERROR("Invalid value type. field name=%s, type=%d, but given=%d",
-                  field->name(), field->type(), value.type);
+        LOG_ERROR("Invalid date type. field name=%s",
+                  field->name());
         return RC::SCHEMA_FIELD_TYPE_MISMATCH;
       }
     } else {
