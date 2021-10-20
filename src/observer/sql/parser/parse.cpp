@@ -354,10 +354,9 @@ void query_destroy(Query *query) {
 extern "C" int sql_parse(const char *st, Query *sqls);
 
 RC parse(const char *st, Query *sqln) {
-  sql_parse(st, sqln);
-
-  if (sqln->flag == SCF_ERROR)
+  int result = sql_parse(st, sqln);
+  if (result != 0 || sqln->flag == SCF_ERROR) {
     return SQL_SYNTAX;
-  else
+  } else
     return SUCCESS;
 }
