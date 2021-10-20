@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "condition_filter.h"
+#include "common/lang/date.h"
 #include "common/log/log.h"
 #include "record_manager.h"
 #include "storage/common/table.h"
@@ -104,6 +105,16 @@ RC DefaultConditionFilter::init(Table &table, const Condition &condition) {
     right.attr_offset = 0;
   }
 
+#define CONVERT_CHARS_DATES(A, B)                                                               \
+  if (type_##A == DATES && type_##B == CHARS && common::check_date((const char *) (B).value)) { \
+    type_##B = DATES;                                                                           \
+    uint32_t *data = new uint32_t;                                                              \
+    *data = common::str_to_date((const char *) (B).value);                                      \
+    (B).value = data;                                                                           \
+  }
+
+  CONVERT_CHARS_DATES(left, right);
+  CONVERT_CHARS_DATES(right, left);
   // 校验和转换
   //  if (!field_type_compare_compatible_table[type_left][type_right]) {
   //    // 不能比较的两个字段， 要把信息传给客户端
