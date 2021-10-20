@@ -319,7 +319,7 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
     if (field->type() == AttrType::DATES && value.type == AttrType::CHARS) {
-      uint32_t timestamp = common::str_to_date((const char *)value.data);
+      uint32_t timestamp = common::str_to_date((const char *) value.data);
       memcpy(record + field->offset(), &timestamp, field->len());
     } else {
       memcpy(record + field->offset(), value.data, field->len());
@@ -571,9 +571,65 @@ RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_n
   return rc;
 }
 
+bool match_table(const char *relation_name, const char *table_name) {
+  if (relation_name == nullptr) {
+    return true;
+  };
+  return 0 == strcmp(relation_name, table_name);
+}
+
+struct UpdateContext {
+  RecordFileHandler *record_handler;
+  TableMeta *table_meta;
+  char *attribute_name;
+  Value *value;
+};
+
+RC update(Record *record, void *context) {
+  UpdateContext *c = (UpdateContext *) context;
+  const FieldMeta *field = c->table_meta->field(c->attribute_name);
+  const Value *value = c->value;
+  if (field->type() == AttrType::DATES && value->type == AttrType::CHARS) {
+    uint32_t timestamp = common::str_to_date((const char *) value->data);
+    memcpy(record->data + field->offset(), &timestamp, field->len());
+  } else {
+    memcpy(record->data + field->offset(), value->data, field->len());
+  }
+  c->record_handler->update_record(record);
+}
+
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num,
                         const Condition conditions[], int *updated_count) {
-  return RC::GENERIC_ERROR;
+  // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
+  std::vector<DefaultConditionFilter *> condition_filters;
+  auto table_name = name();
+  for (size_t i = 0; i < condition_num; i++) {
+    const Condition &condition = conditions[i];
+    if (condition.left_is_attr == 1 && !match_table(condition.left_attr.relation_name, table_name)) {
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    if (condition.right_is_attr == 1 && !match_table(condition.right_attr.relation_name, table_name)) {
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    DefaultConditionFilter *condition_filter = new DefaultConditionFilter();
+    RC rc = condition_filter->init(*this, condition);
+    if (rc != RC::SUCCESS) {
+      delete condition_filter;
+      for (DefaultConditionFilter *&filter : condition_filters) {
+        delete filter;
+      }
+      return rc;
+    }
+    condition_filters.push_back(condition_filter);
+  }
+  CompositeConditionFilter condition_filter;
+  condition_filter.init((const ConditionFilter **) condition_filters.data(), condition_filters.size());
+  UpdateContext c = UpdateContext();
+  c.record_handler = record_handler_;
+  c.value = (Value *) value;
+  c.attribute_name = (char *) attribute_name;
+  c.table_meta = &table_meta_;
+  return scan_record(trx, &condition_filter, -1, (void *) &c, update);
 }
 
 class RecordDeleter {
