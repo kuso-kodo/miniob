@@ -588,6 +588,9 @@ struct UpdateContext {
 RC update(Record *record, void *context) {
   UpdateContext *c = (UpdateContext *) context;
   const FieldMeta *field = c->table_meta->field(c->attribute_name);
+  if (field == nullptr) {
+    return RC::SCHEMA_FIELD_MISSING;
+  }
   const Value *value = c->value;
   if (field->type() == AttrType::DATES && value->type == AttrType::CHARS) {
     uint32_t timestamp = common::str_to_date((const char *) value->data);
@@ -600,6 +603,15 @@ RC update(Record *record, void *context) {
 
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num,
                         const Condition conditions[], int *updated_count) {
+  // Check field
+  const FieldMeta *field = table_meta_.field(attribute_name);
+  if (field == nullptr) {
+    return RC::SCHEMA_FIELD_MISSING;
+  }
+  if (field->type() != value->type &&
+      !(field->type() == AttrType::DATES && value->type == AttrType::CHARS)) {
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
   std::vector<DefaultConditionFilter *> condition_filters;
   auto table_name = name();
