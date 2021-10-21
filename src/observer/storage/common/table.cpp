@@ -611,6 +611,10 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   if (field->type() != value->type &&
       !(field->type() == AttrType::DATES && value->type == AttrType::CHARS)) {
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  } else if (field->type() == AttrType::DATES
+             && value->type == AttrType::CHARS
+             && !common::check_date((const char *)value->data)) {
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
   std::vector<DefaultConditionFilter *> condition_filters;
