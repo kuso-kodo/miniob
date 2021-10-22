@@ -2,8 +2,8 @@
 namespace common {
     bool check_date(const char *date) {
         int y, m, d;
-        auto count = sscanf((const char *) date, "%d-%d-%d", &y, &m, &d);
-        if (count != 3 || y < 0 || m < 1 || d < 1 || m > 12) {
+        auto count = sscanf(date, "%d-%d-%d", &y, &m, &d);
+        if (count != 3 || y < 1970 || y > 2038 || m < 1 || d < 1 || m > 12) {
             return false;
         }
         bool isRunYear;
