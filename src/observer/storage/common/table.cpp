@@ -403,8 +403,16 @@ RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *contex
   IndexScanner *index_scanner = find_index_for_scan(filter);
   if (index_scanner != nullptr) {
     return scan_record_by_index(trx, index_scanner, filter, limit, context, record_reader);
+  } else {
+    return scan_record_by_file(trx, filter, limit, context, record_reader);
   }
+}
 
+RC Table::scan_record_by_file(Trx *trx, ConditionFilter *filter, int limit, void *context,
+                      RC (*record_reader)(Record *record, void *context)) {
+  if (limit < 0) {
+    limit = INT_MAX;
+  }
   RC rc = RC::SUCCESS;
   RecordFileScanner scanner;
   rc = scanner.open_scan(*data_buffer_pool_, file_id_, filter);
@@ -583,6 +591,7 @@ struct UpdateContext {
   TableMeta *table_meta;
   char *attribute_name;
   Value *value;
+  Index *index;
 };
 
 RC update(Record *record, void *context) {
@@ -592,13 +601,37 @@ RC update(Record *record, void *context) {
     return RC::SCHEMA_FIELD_MISSING;
   }
   const Value *value = c->value;
+  if (c->index != nullptr) {
+    auto rc = c->index->delete_entry(record->data, &record->rid);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to delete old index %d:%s", rc, strrc(rc));
+      return rc;
+    }
+  }
+  int record_size = c->table_meta->record_size();
+  char *data = new char[record_size];
+  memcpy(data, record->data, record_size);
   if (field->type() == AttrType::DATES && value->type == AttrType::CHARS) {
     uint32_t timestamp = common::str_to_date((const char *) value->data);
-    memcpy(record->data + field->offset(), &timestamp, field->len());
+    memcpy(data + field->offset(), &timestamp, field->len());
   } else {
-    memcpy(record->data + field->offset(), value->data, field->len());
+    memcpy(data + field->offset(), value->data, field->len());
   }
-  c->record_handler->update_record(record);
+  record->data = data;
+  auto rc = c->record_handler->update_record(record);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to insert record %d:%s", rc, strrc(rc));
+    return rc;
+  }
+  if (c->index != nullptr) {
+    rc = c->index->insert_entry(data, &record->rid);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to insert index %d:%s", rc, strrc(rc));
+      return rc;
+    }
+  }
+  delete[] data;
+  return rc;
 }
 
 RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num,
@@ -619,6 +652,7 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
   std::vector<DefaultConditionFilter *> condition_filters;
   auto table_name = name();
+  bool can_use_index = true;
   for (size_t i = 0; i < condition_num; i++) {
     const Condition &condition = conditions[i];
     if (condition.left_is_attr == 1 && !match_table(condition.left_attr.relation_name, table_name)) {
@@ -626,6 +660,10 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
     }
     if (condition.right_is_attr == 1 && !match_table(condition.right_attr.relation_name, table_name)) {
       return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    if ((condition.left_is_attr == 1 && strcmp(condition.left_attr.attribute_name, attribute_name) == 0) ||
+            (condition.right_is_attr == 1 && strcmp(condition.right_attr.attribute_name, attribute_name) == 0)) {
+      can_use_index = false;
     }
     DefaultConditionFilter *condition_filter = new DefaultConditionFilter();
     RC rc = condition_filter->init(*this, condition);
@@ -645,7 +683,14 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   c.value = (Value *) value;
   c.attribute_name = (char *) attribute_name;
   c.table_meta = &table_meta_;
-  return scan_record(trx, &condition_filter, -1, (void *) &c, update);
+  auto index_meta = table_meta_.find_index_by_field(field->name());
+  auto index_name = index_meta != nullptr? index_meta->name() : nullptr;
+  c.index = index_name != nullptr? find_index(index_name) : nullptr;
+  if (can_use_index) {
+    return scan_record(trx, &condition_filter, -1, (void *) &c, update);
+  } else {
+    return scan_record_by_file(trx, &condition_filter, -1, (void *) &c, update);
+  }
 }
 
 class RecordDeleter {
