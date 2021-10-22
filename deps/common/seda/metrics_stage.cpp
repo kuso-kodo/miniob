@@ -23,9 +23,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "common/metrics/metrics_registry.h"
 #include "common/seda/metrics_report_event.h"
+#include "common/seda/seda_defs.h"
 #include "common/seda/timer_stage.h"
 #include "common/time/datetime.h"
-#include "common/seda/seda_defs.h"
 
 using namespace common;
 
@@ -56,7 +56,7 @@ Stage *MetricsStage::make_stage(const std::string &tag) {
 bool MetricsStage::set_properties() {
   std::string stage_name_str(stage_name_);
   std::map<std::string, std::string> section =
-      get_properties()->get(stage_name_str);
+          get_properties()->get(stage_name_str);
 
   metric_report_interval_ = DateTime::SECONDS_PER_MIN;
 
@@ -103,7 +103,7 @@ void MetricsStage::handle_event(StageEvent *event) {
   }
 
   TimerRegisterEvent *tm_event =
-      new TimerRegisterEvent(event, metric_report_interval_ * USEC_PER_SEC);
+          new TimerRegisterEvent(event, metric_report_interval_ * USEC_PER_SEC);
   if (tm_event == NULL) {
     LOG_ERROR("Failed to new TimerRegisterEvent");
 

@@ -20,7 +20,7 @@
 #include "lang/mutex.h"
 #include "mm/lmem.h"
 
-#define MEM_ID_HASH(p) (((unsigned long)(p) >> 8) % MEM_HASHTABLE_SIZE)
+#define MEM_ID_HASH(p) (((unsigned long) (p) >> 8) % MEM_HASHTABLE_SIZE)
 
 pthread_mutex_t CLMemTrace::mMutex = PTHREAD_MUTEX_INITIALIZER;
 u64_t CLMemTrace::mUsedSize = 0;
@@ -35,7 +35,7 @@ void *CLMemTrace::malloc(size_t size, const char *file, const int line,
   void *usedPointer = NULL;
 
   do {
-    MemID *ptr = (MemID *)::malloc(allocSize);
+    MemID *ptr = (MemID *) ::malloc(allocSize);
     if (ptr) {
       // successfully alloc memory
 
@@ -45,8 +45,8 @@ void *CLMemTrace::malloc(size_t size, const char *file, const int line,
       ptr->mLine = line;
       ptr->mSize = size;
 
-      usedPointer = (char *)ptr + sizeof(MemID);
-      u64_t hashIndex = (u64_t)MEM_ID_HASH(usedPointer);
+      usedPointer = (char *) ptr + sizeof(MemID);
+      u64_t hashIndex = (u64_t) MEM_ID_HASH(usedPointer);
 
       MUTEX_LOCK(&mMutex);
 
@@ -113,7 +113,7 @@ void *CLMemTrace::realloc(void *pointer, size_t size, const char *file,
   u64_t hashIndex = MEM_ID_HASH(pointer);
   pMemID = mMemIDs[hashIndex];
   while (pMemID) {
-    if ((char *)pMemID + sizeof(MemID) != pointer) {
+    if ((char *) pMemID + sizeof(MemID) != pointer) {
       // not found
       pLast = pMemID;
       pMemID = pMemID->mNext;
@@ -128,7 +128,7 @@ void *CLMemTrace::realloc(void *pointer, size_t size, const char *file,
 
     u64_t allocSize = size + sizeof(MemID);
 
-    pNewMemID = (MemID *)::realloc(pMemID, allocSize);
+    pNewMemID = (MemID *) ::realloc(pMemID, allocSize);
     if (pNewMemID == NULL) {
       // case 1:no memory to alloc, free the old one
       if (pLast == NULL) {
@@ -173,7 +173,7 @@ void *CLMemTrace::realloc(void *pointer, size_t size, const char *file,
        * Secondly, add the new one to table
        */
       u64_t newHashIndex =
-          (u64_t)MEM_ID_HASH((char *)pNewMemID + sizeof(MemID));
+              (u64_t) MEM_ID_HASH((char *) pNewMemID + sizeof(MemID));
 
       pNewMemID->mNext = mMemIDs[newHashIndex];
       mMemIDs[newHashIndex] = pNewMemID;
@@ -182,8 +182,8 @@ void *CLMemTrace::realloc(void *pointer, size_t size, const char *file,
        * Third, do memory copy
        * to simplify the old logic, copy memory here
        */
-      memcpy((char *)pNewMemID + sizeof(MemID),
-             (char *)pFreeMemID + sizeof(MemID), pFreeMemID->mSize);
+      memcpy((char *) pNewMemID + sizeof(MemID),
+             (char *) pFreeMemID + sizeof(MemID), pFreeMemID->mSize);
       break;
     }
   }
@@ -192,8 +192,8 @@ void *CLMemTrace::realloc(void *pointer, size_t size, const char *file,
 
   if (foundOld == false) {
     LOG_WARN(
-        "Something is wrong, the old pointer %p isn't found, so alloc new one",
-        pointer);
+            "Something is wrong, the old pointer %p isn't found, so alloc new one",
+            pointer);
     try {
       return malloc(size, file, line, false);
     } catch (std::bad_alloc &e) {
@@ -215,7 +215,7 @@ void *CLMemTrace::realloc(void *pointer, size_t size, const char *file,
 
     if (mVerbose) {
       LOG_INFO("Alloc %p, file:%s, line:%u, size:%llu",
-               (char *)pNewMemID + sizeof(MemID), pNewMemID->mFile,
+               (char *) pNewMemID + sizeof(MemID), pNewMemID->mFile,
                pNewMemID->mLine, pNewMemID->mSize);
     }
     return pNewMemID;
@@ -240,7 +240,7 @@ void CLMemTrace::free(void *pointer) {
 
   pMemID = mMemIDs[hashIndex];
   while (pMemID) {
-    if ((char *)pMemID + sizeof(MemID) == pointer) {
+    if ((char *) pMemID + sizeof(MemID) == pointer) {
       // find
       if (pLast == NULL) {
         mMemIDs[hashIndex] = pMemID->mNext;
@@ -299,7 +299,7 @@ void CLMemTrace::output() {
     while (ptr) {
       // if LOG_INFO alloc memory, it will easy leading to dead lock
       LOG_INFO("Exist %p, file:%s, line:%u, size:%llu",
-               (char *)ptr + sizeof(MemID), ptr->mFile, ptr->mLine, ptr->mSize);
+               (char *) ptr + sizeof(MemID), ptr->mFile, ptr->mLine, ptr->mSize);
       ptr = ptr->mNext;
     }
 

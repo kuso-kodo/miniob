@@ -20,9 +20,9 @@ See the Mulan PSL v2 for more details. */
 namespace common {
 
 
-class Stage;
+  class Stage;
 
-typedef ClassFactory<Stage> StageFactory;
+  typedef ClassFactory<Stage> StageFactory;
 
-} //namespace common
-#endif // __COMMON_SEDA_STAGE_FACTORY_H__
+}//namespace common
+#endif// __COMMON_SEDA_STAGE_FACTORY_H__

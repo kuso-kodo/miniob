@@ -35,10 +35,10 @@ namespace common {
 #define STR1(R) #R
 #define STR2(R) STR1(R)
 
-#define VERSION_STR                                                            \
+#define VERSION_STR \
   (STR2(MAIJOR_VER) "." STR2(MINOR_VER) "." STR2(PATCH_VER) "." STR2(OTHER_VER))
-#define VERSION_NUM                                                            \
+#define VERSION_NUM \
   (MAIJOR_VER << 24 | MINOR_VER << 16 | PATCH_VER << 8 | OTHER_VER)
 
-} //namespace common
-#endif //__COMMON_VERSION_H__
+}//namespace common
+#endif//__COMMON_VERSION_H__

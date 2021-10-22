@@ -18,11 +18,11 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 namespace common {
 
-class SelectDir {
-public:
-  virtual std::string select() { return std::string(""); };
-  virtual void setBaseDir(std::string baseDir){};
-};
+  class SelectDir {
+  public:
+    virtual std::string select() { return std::string(""); };
+    virtual void setBaseDir(std::string baseDir){};
+  };
 
-} //namespace common
+}//namespace common
 #endif /* __COMMON_IO_SELECT_DIR_H__ */

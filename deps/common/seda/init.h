@@ -17,9 +17,9 @@ See the Mulan PSL v2 for more details. */
 
 // Basic includes
 #include <assert.h>
-#include <signal.h>
 #include <iostream>
 #include <set>
+#include <signal.h>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -29,12 +29,12 @@ See the Mulan PSL v2 for more details. */
 #include "common/os/process_param.h"
 namespace common {
 
-/**
+  /**
  * start the seda process, do this will trigger all threads
  */
-int init_seda(ProcessParam *process_cfg);
+  int init_seda(ProcessParam *process_cfg);
 
-void cleanup_seda();
+  void cleanup_seda();
 
-} //namespace common
-#endif // __COMMON_SEDA_INIT_H__
+}//namespace common
+#endif// __COMMON_SEDA_INIT_H__
