@@ -35,7 +35,8 @@ See the Mulan PSL v2 for more details. */
 
 using namespace common;
 
-RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node);
+RC create_tuple_schema(TupleSchema &schema, const Selects &selects, const char *db, std::vector<const char *> &table_names, bool force_all);
+RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node, bool force_all);
 
 //! Constructor
 ExecuteStage::ExecuteStage(const char *tag) : Stage(tag) {}
@@ -217,7 +218,29 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   Session *session = session_event->get_client()->session;
   Trx *trx = session->current_trx();
   const Selects &selects = sql->sstr.selection;
-  // Check selects
+  // Check attrs relation
+  for (size_t i = 0; i < selects.attr_num; i++) {
+    auto attr = selects.attributes[i];
+    if (attr.relation_name == nullptr) {
+      if (selects.relation_num > 1) {
+        rc = RC::SCHEMA_TABLE_NOT_EXIST;
+        RETURN_RC;
+      } else {
+        continue;
+      }
+    }
+    bool match = false;
+    for (size_t j = 0; j < selects.relation_num; j++) {
+      if (strcmp(attr.relation_name, selects.relations[j]) == 0) {
+        match = true;
+      }
+    }
+    if (!match) {
+      rc = RC::SCHEMA_TABLE_NOT_EXIST;
+      RETURN_RC;
+    }
+  }
+  // Check conditions
   for (size_t i = 0; i < selects.condition_num; i++) {
     auto condition = selects.conditions[i];
 #define CHECK_CONDITION(A)                                                         \
@@ -247,7 +270,8 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   for (size_t i = 0; i < selects.relation_num; i++) {
     const char *table_name = selects.relations[i];
     SelectExeNode *select_node = new SelectExeNode;
-    rc = create_selection_executor(trx, selects, db, table_name, *select_node);
+    bool force_all = selects.relation_num > 1;
+    rc = create_selection_executor(trx, selects, db, table_name, *select_node, force_all);
     if (rc != RC::SUCCESS) {
       delete select_node;
       for (SelectExeNode *&tmp_node : select_nodes) {
@@ -284,6 +308,18 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   std::stringstream ss;
   if (tuple_sets.size() > 1) {
     // 本次查询了多张表，需要做join操作
+    TupleSchema result_schema;
+    auto table_names = std::vector<const char *>();
+    for (int i = 0; i < selects.relation_num; i++) {
+      table_names.push_back(selects.relations[i]);
+    }
+    rc = create_tuple_schema(result_schema, selects, db, table_names, false);
+    if (rc == SUCCESS) {
+      result_schema.print(ss);
+      for (int i = 0; i < tuple_sets.size(); i++) {
+        tuple_sets[i].print(ss);
+      }
+    }
   } else {
     // 当前只查询一张表，直接返回结果即可
     tuple_sets.front().print(ss);
@@ -318,18 +354,35 @@ static RC schema_add_field(Table *table, const char *field_name, TupleSchema &sc
   return RC::SUCCESS;
 }
 
-// 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
-RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node) {
-  // 列出跟这张表关联的Attr
-  TupleSchema schema;
-  Table *table = DefaultHandler::get_default().find_table(db, table_name);
-  if (nullptr == table) {
-    LOG_WARN("No such table [%s] in db [%s]", table_name, db);
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-
+RC create_tuple_schema(TupleSchema &schema, const Selects &selects, const char *db, std::vector<const char *> &table_names, bool force_all) {
+  bool multiple_mode = table_names.size() > 1;
   for (int i = selects.attr_num - 1; i >= 0; i--) {
     const RelAttr &attr = selects.attributes[i];
+    if (nullptr == attr.relation_name && multiple_mode) {
+      return RC::SCHEMA_FIELD_MISSING;
+    }
+    const char *table_name = nullptr;
+    if (table_names.size() == 1) {
+      table_name = table_names.front();
+    } else {
+      for (auto name : table_names) {
+        if (strcmp(name, attr.relation_name) == 0) {
+          table_name = name;
+        }
+      }
+      if (table_name == nullptr) {
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+      }
+    }
+    Table *table = DefaultHandler::get_default().find_table(db, table_name);
+    if (nullptr == table) {
+      LOG_WARN("No such table [%s] in db [%s]", table_name, db);
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    if (force_all) {
+      TupleSchema::from_table(table, schema);
+      break;
+    }
     if (nullptr == attr.relation_name || 0 == strcmp(table_name, attr.relation_name)) {
       if (0 == strcmp("*", attr.attribute_name)) {
         // 列出这张表所有字段
@@ -344,6 +397,19 @@ RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, c
       }
     }
   }
+  return RC::SUCCESS;
+}
+
+// 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
+RC create_selection_executor(Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node, bool force_all) {
+  // 列出跟这张表关联的Attr
+  TupleSchema schema;
+  auto table_names = std::vector<const char *>{table_name};
+  auto rc = create_tuple_schema(schema, selects, db, table_names, force_all);
+  if (rc != SUCCESS) {
+    return rc;
+  }
+  Table *table = DefaultHandler::get_default().find_table(db, table_name);
 
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
   std::vector<DefaultConditionFilter *> condition_filters;

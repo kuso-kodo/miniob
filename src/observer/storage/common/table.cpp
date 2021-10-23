@@ -409,7 +409,7 @@ RC Table::scan_record(Trx *trx, ConditionFilter *filter, int limit, void *contex
 }
 
 RC Table::scan_record_by_file(Trx *trx, ConditionFilter *filter, int limit, void *context,
-                      RC (*record_reader)(Record *record, void *context)) {
+                              RC (*record_reader)(Record *record, void *context)) {
   if (limit < 0) {
     limit = INT_MAX;
   }
@@ -644,9 +644,7 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   if (field->type() != value->type &&
       !(field->type() == AttrType::DATES && value->type == AttrType::CHARS)) {
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
-  } else if (field->type() == AttrType::DATES
-             && value->type == AttrType::CHARS
-             && !common::check_date((const char *)value->data)) {
+  } else if (field->type() == AttrType::DATES && value->type == AttrType::CHARS && !common::check_date((const char *) value->data)) {
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
   // 找出仅与此表相关的过滤条件, 或者都是值的过滤条件
@@ -662,7 +660,7 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
     if ((condition.left_is_attr == 1 && strcmp(condition.left_attr.attribute_name, attribute_name) == 0) ||
-            (condition.right_is_attr == 1 && strcmp(condition.right_attr.attribute_name, attribute_name) == 0)) {
+        (condition.right_is_attr == 1 && strcmp(condition.right_attr.attribute_name, attribute_name) == 0)) {
       can_use_index = false;
     }
     DefaultConditionFilter *condition_filter = new DefaultConditionFilter();
@@ -684,8 +682,8 @@ RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value
   c.attribute_name = (char *) attribute_name;
   c.table_meta = &table_meta_;
   auto index_meta = table_meta_.find_index_by_field(field->name());
-  auto index_name = index_meta != nullptr? index_meta->name() : nullptr;
-  c.index = index_name != nullptr? find_index(index_name) : nullptr;
+  auto index_name = index_meta != nullptr ? index_meta->name() : nullptr;
+  c.index = index_name != nullptr ? find_index(index_name) : nullptr;
   if (can_use_index) {
     return scan_record(trx, &condition_filter, -1, (void *) &c, update);
   } else {
