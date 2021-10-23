@@ -6,14 +6,7 @@ namespace common {
     if (count != 3 || y < 1970 || y > 2038 || m < 1 || d < 1 || m > 12) {
       return false;
     }
-    bool isRunYear = false;
-    if (y % 4 == 0) {
-      if (y % 100 == 0) {
-        isRunYear = ((y % 400) == 0);
-      } else {
-        isRunYear = true;
-      }
-    }
+    bool isRunYear = (y % 4 == 0);
     int day[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     if (m == 2) {
       return isRunYear ? (d <= 29) : (d <= 28);
