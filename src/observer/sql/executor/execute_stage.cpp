@@ -220,32 +220,27 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   // Check selects
   for (size_t i = 0; i < selects.condition_num; i++) {
     auto condition = selects.conditions[i];
-    if (condition.left_is_attr
-        && condition.left_attr.relation_name != nullptr) {
-      bool match = false;
-      for (size_t j = 0; j < selects.relation_num; j++) {
-        if (0 == strcmp(condition.left_attr.relation_name, selects.relations[j])) {
-          match = true;
-        }
-      }
-      if (!match) {
-        rc =  RC::SCHEMA_TABLE_NOT_EXIST;
-        RETURN_RC;
-      }
-    }
-    if (condition.right_is_attr
-        && condition.right_attr.relation_name != nullptr) {
-      bool match = false;
-      for (size_t j = 0; j < selects.relation_num; j++) {
-        if (0 == strcmp(condition.right_attr.relation_name, selects.relations[j])) {
-          match = true;
-        }
-      }
-      if (!match) {
-        rc = RC::SCHEMA_TABLE_NOT_EXIST;
-        RETURN_RC;
-      }
-    }
+#define CHECK_CONDITION(A)                                                         \
+  if (condition.A##_is_attr) {                                                     \
+    if (condition.A##_attr.relation_name != nullptr) {                             \
+      bool match = false;                                                          \
+      for (size_t j = 0; j < selects.relation_num; j++) {                          \
+        if (0 == strcmp(condition.A##_attr.relation_name, selects.relations[j])) { \
+          match = true;                                                            \
+        }                                                                          \
+      }                                                                            \
+      if (!match) {                                                                \
+        rc = RC::SCHEMA_TABLE_NOT_EXIST;                                           \
+        RETURN_RC;                                                                 \
+      }                                                                            \
+    } else if (selects.relation_num > 1) {                                         \
+      rc = RC::SCHEMA_TABLE_NOT_EXIST;                                             \
+      RETURN_RC;                                                                   \
+    }                                                                              \
+  }
+
+    CHECK_CONDITION(left);
+    CHECK_CONDITION(right);
   }
   // 把所有的表和只跟这张表关联的condition都拿出来，生成最底层的select 执行节点
   std::vector<SelectExeNode *> select_nodes;
@@ -300,6 +295,7 @@ RC ExecuteStage::do_select(const char *db, Query *sql, SessionEvent *session_eve
   session_event->set_response(ss.str());
   end_trx_if_need(session, trx, true);
   return rc;
+#undef CHECK_CONDITION
 #undef RETURN_RC
 }
 
