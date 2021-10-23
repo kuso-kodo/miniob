@@ -1,12 +1,12 @@
 #include "common/lang/date.h"
 namespace common {
   bool check_date(const char *date) {
-    int y, m, d;
+    int y = 0, m = 0, d = 0;
     auto count = sscanf(date, "%d-%d-%d", &y, &m, &d);
     if (count != 3 || y < 1970 || y > 2038 || m < 1 || d < 1 || m > 12) {
       return false;
     }
-    bool isRunYear;
+    bool isRunYear = false;
     if (y % 4 == 0) {
       if (y % 100 == 0) {
         isRunYear = ((y % 400) == 0);
