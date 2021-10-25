@@ -11,7 +11,7 @@ namespace common {
     if (m == 2) {
       return isRunYear ? (d <= 29) : (d <= 28);
     } else {
-      return d <= day[m + 1];
+      return d <= day[m - 1];
     }
   }
 
